@@ -8,4 +8,3 @@ group :development do
   gem 'guard-sass'
   gem 'guard-unicorn'
 end
-
