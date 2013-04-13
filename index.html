@@ -1,0 +1,337 @@
+
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+		<style>
+		body {
+			overflow	: hidden;
+			padding		: 0;
+			margin		: 0;
+			background:url(swu_ipad.jpg) no-repeat center #000;
+		}
+		#info {
+			position	: absolute;
+			top		: 0px;
+			width		: 100%;
+			padding		: 5px;
+			text-align	: center;
+		}
+		#info a {
+			color		: #66F;
+			position: absolute;
+			text-decoration	: none;
+		}
+		#info a:hover {
+			text-decoration	: underline;
+		}
+		#container {
+			width		: 100%;
+			height		: 100%;
+			overflow	: hidden;
+			padding		: 0;
+			margin		: 0;
+			-webkit-user-select	: none;
+			-moz-user-select	: none;
+		}
+		#joystickBase {
+			width: 520px;
+			height: 350px;
+			left: 250px;
+			top: 155px;
+			border:4px dashed rgb(253,249,20);
+			position: absolute;
+			border-radius:15px;
+			opacity:0.1;
+			background:url(grid.gif) no-repeat center;
+		}
+    #joystickTop {
+			width: 150px;
+			height: 150px;
+			border:2px dashed rgba(253,249,20,0.6);
+			background-color:rgba(0,0,0,0);
+			position: absolute;
+			border-radius:15px;
+			box-shadow: inset 0 0 20px rgba(0,0,0,0.4), 0 0 20px rgba(0,0,0,0.4);
+			background:url(dragger.png) no-repeat center;
+		}
+		.button {
+			width: 100px;
+			height: 100px;
+			position: absolute;
+			border-radius:100px;
+			transition: 0.2s ease;
+      -webkit-transition: 0.2s ease;
+		}
+		#actionButton {
+		  width:170px;
+		  height:90px;
+		  left:431px;
+		  top:23px;
+		}
+		#actionButton:hover {
+		  box-shadow: 0 0 20px rgba(71,204,242,0.9);
+		  background-color:rgba(71,204,242,0.4);
+		  cursor:pointer;
+		}
+		#locationButton {
+		  right:124px;
+		  top: 283px;
+		}
+		#locationButton:hover {
+		  box-shadow: 0 0 20px rgba(242,71,71,0.9);
+		  background-color:rgba(242,71,71,0.4);
+		  cursor:pointer;
+		}
+		#characterButton {
+		  left:120px;
+		  top: 283px;
+		}
+		#characterButton:hover {
+		  box-shadow: 0 0 20px rgba(184,272,71,0.9);
+		  background-color:rgba(184,272,71,0.4);
+		  cursor:pointer;
+		}
+
+		@media 
+    (-webkit-min-device-pixel-ratio: 2), 
+    (min-resolution: 192dpi) { 
+        /* Retina-specific stuff here */
+        body { background:url(swu_ipad_full.jpg) no-repeat center #000; }
+    }
+		</style>
+	</head>
+	<body>
+		<div id="container">
+			<div id="info">
+				
+			</div>
+			<div class="joystick">
+  			<div id="joystickBase"></div>
+  			<div id="joystickTop"></div>
+  		</div>
+			<div class="buttons">
+  			<div id="actionButton" class="button"></div>
+  			<div id="characterButton" class="button"></div>
+  			<div id="locationButton" class="button"></div>
+			</div>
+
+		</div>
+		<script src="jquery-1.8.3.min.js"></script>
+		<script src="tween.min.js"></script>
+		<script>
+
+			var top;
+			var topW, topH;
+			var topPosX, topPosY;
+			var homePosX, homePosY;
+			var dragOffsetX, dragOffsetY;
+
+			var maxDist = 200;
+			var deadZoneDist = 50;
+			var dist;
+			var frameCounter = 0;
+
+			var base;
+			var baseW, baseH;
+			var basePos;
+
+
+			var tweenBack;
+
+
+
+			$(document).ready( function() {
+				document.ontouchmove = function(event){
+					event.preventDefault();
+				}
+
+				// set joystick top to be centered in the joystick base
+				console.log(top);
+				topW = $('#joystickTop').width();
+				topH = $('#joystickTop').height();
+				// console.log( 'top w: ' + topW + ' top h: ' + topH );
+
+				baseW = $('#joystickBase').width();
+				baseH = $('#joystickBase').height();
+				basePos = $('#joystickBase').position();
+				// console.log( 'base w: ' + baseW + ' base h: ' + baseH + ' position: ' + basePos.top + ', ' + basePos.left );
+
+				homePosX = topPosX = basePos.left + baseW/2;// - topW/2;
+				homePosY = topPosY = basePos.top + baseH/2;// - topH/2;
+
+				setTopPosition();
+
+				animate();
+				function animate() {
+					// $('#info').html( 'animating: ' + Date.now() + '   ' + webkitRequestAnimationFrame );
+					//webkitRequestAnimationFrame( animate );
+					setTimeout( animate, (1/60) * 1000 );
+					TWEEN.update();
+					if ( !tweenBack && dist > deadZoneDist && (frameCounter % 5) == 0 ) {
+						var msg = {
+							type: 'joystick',
+							x: (topPosX-homePosX)/maxDist,
+							y: (topPosY-homePosY)/-maxDist
+						}
+
+						socket.send( JSON.stringify(msg) );
+						// console.log( 'send ' +  + ', ' +  );
+					}
+				}
+
+				function setTopPosition() {
+
+					$('#joystickTop').css( {
+						top: (topPosY - topW/2) + 'px',
+						left: (topPosX - topH/2) + 'px'
+					});
+				}
+
+
+				$('#joystickTop').on( 'mousedown', touchStart );
+				$('#joystickTop').on( 'touchstart', touchStart );
+				
+				$('.button').on( 'touchstart', buttonTouch );
+				$('.button').on( 'mousedown', buttonTouch );
+
+				function buttonTouch(e) {
+					e.preventDefault();
+					// $('#info').html( 'touch ' + this.id );
+					var msg = {
+						type: this.id
+					}
+					socket.send( JSON.stringify(msg) );
+				}
+
+				function touchStart(e) {
+					if ( tweenBack )
+						return;
+
+					if ( e.originalEvent.touches ) {
+					// if ( e.originalEvent instanceof TouchEvent ) {
+						var pos = $('#joystickTop').position();
+
+						dragOffsetX = e.originalEvent.touches[0].clientX - pos.left;
+						dragOffsetY = e.originalEvent.touches[0].clientY - pos.top;
+					}
+					else {
+						dragOffsetX = e.offsetX;
+						dragOffsetY = e.offsetY;
+					}
+
+					$(window).on( 'mousemove', touchMove );
+					$(window).on( 'touchmove', touchMove );
+
+
+					$(window).on( 'mouseup', touchEnd );
+					$(window).on( 'touchend', touchEnd );
+				}
+
+				function touchMove(e) {
+					if ( e.originalEvent.touches ) {
+						var pageX = e.originalEvent.touches[0].pageX;
+						var pageY = e.originalEvent.touches[0].pageY;
+
+						topPosX = parseInt(e.originalEvent.touches[0].pageX) + (topW/2 - dragOffsetX);
+						topPosY = parseInt(e.originalEvent.touches[0].pageY) + (topH/2 - dragOffsetY);
+
+					}
+					else {
+						topPosX = e.pageX + (topW/2 - dragOffsetX);
+						topPosY = e.pageY + (topH/2 - dragOffsetY);
+					}
+
+					function distance( x1, y1, x2, y2 ) {
+						return Math.sqrt( (x2-x1) * (x2-x1) + (y2-y1) * (y2-y1) );
+					}
+
+					dist = distance( topPosX, topPosY, homePosX, homePosY );
+					if ( dist > maxDist ) {
+						var diffX = topPosX - homePosX;
+						var diffY = topPosY - homePosY;
+						topPosX = homePosX + diffX * (maxDist/dist);
+						topPosY = homePosY + diffY * (maxDist/dist);
+					}
+
+					setTopPosition();
+				}
+
+				function touchEnd(e) {
+
+					// $('#info').html( 'touch end at ' + Date.now() + ' TWEEN: ' + TWEEN );
+					var msg = {
+						type: 'joystick',
+						x: 0,
+						y: 0
+					}
+
+					socket.send( JSON.stringify(msg) );
+
+					$(window).off( 'mousemove' );
+					$(window).off( 'touchmove' );
+
+					$(window).off( 'mouseup' );
+					$(window).off( 'touchend' );
+					// topPosX = homePosX;
+					// topPosY = homePosY;
+					//setTopPosition();
+
+
+					var start = {
+						posX: topPosX,
+						posY: topPosY
+					}
+					var end = {
+						posX: homePosX,
+						posY: homePosY
+					}
+					var updateCallback = function() {
+						topPosX = this.posX;
+						topPosY = this.posY;
+						// $('#info').html( 'update: ' + this.posX + ', ' + this.posY );
+						setTopPosition();
+					};
+					var completeCallback = function() {
+						tweenBack = null;
+						dist = 0;
+					};
+					tweenBack = new TWEEN.Tween( start )
+										 .to( end, 200 )
+										 .easing( TWEEN.Easing.Quadratic.InOut )
+										 .onUpdate( updateCallback )
+										 .onComplete( completeCallback )
+										 .start();
+
+				}
+
+				
+
+				var socket = new WebSocket("ws://freqout.local:8080");
+				socket.onopen = onSocketOpen;
+
+				// socket.onmessage = function (event) {
+				// 	console.log(event.data);
+				// }
+
+				function onSocketOpen() {
+				    console.log( 'socket opened' );
+				    // socket.send( JSON.stringify({poop:'poop'}) );
+				}
+
+				// $(window).on( 'click', function() {
+				// 	console.log( 'click' );
+				// 	var msg = {
+				// 		type: 'joystick',
+				// 		x: Math.random(),
+				// 		y: Math.random()
+				// 	}
+
+				// 	socket.send( JSON.stringify(msg) );
+				// });
+
+			});
+		</script>
+	</body>
+</html>
