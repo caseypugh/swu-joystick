@@ -2,4 +2,4 @@ deployment:
    production:
      branch: master
      commands:
-       - $(git push git@heroku.com:swu-joystick.git) || echo "Heroku deployment failed"
+       - $(git push git@heroku.com:swu-joystick.git master) || echo "Heroku deployment failed"
