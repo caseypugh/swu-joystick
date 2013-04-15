@@ -1,241 +1,241 @@
 
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		
-		<link href="css/screen.css" media="screen" rel="stylesheet" type="text/css" />
-	</head>
-	<body>
-		<div id="container">
-			<div id="info">
-				
-			</div>
-			<div class="joystick">
-  			<div id="joystickBase"></div>
-  			<div id="joystickTop"></div>
-  		</div>
-			<div class="buttons">
-  			<div id="actionButton" class="button"></div>
-  			<div id="characterButton" class="button"></div>
-  			<div id="locationButton" class="button"></div>
-			</div>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-		</div>
-		<script src="js/jquery-1.8.3.min.js"></script>
-		<script src="js/tween.min.js"></script>
-		<script>
+    <link href="css/screen.css" media="screen" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div id="container">
+      <div id="info">
+        <div class="text">Character: Luke Skywalker</div>
+      </div>
+      <div class="joystick">
+        <div id="joystickBase"></div>
+        <div id="joystickTop"></div>
+      </div>
+      <div class="buttons">
+        <div id="actionButton" class="button"></div>
+        <div id="characterButton" class="button"></div>
+        <div id="locationButton" class="button"></div>
+      </div>
 
-			var top;
-			var topW, topH;
-			var topPosX, topPosY;
-			var homePosX, homePosY;
-			var dragOffsetX, dragOffsetY;
+    </div>
+    <script src="js/jquery-1.8.3.min.js"></script>
+    <script src="js/tween.min.js"></script>
+    <script>
 
-			var maxDist = 200;
-			var deadZoneDist = 50;
-			var dist;
-			var frameCounter = 0;
+      var top;
+      var topW, topH;
+      var topPosX, topPosY;
+      var homePosX, homePosY;
+      var dragOffsetX, dragOffsetY;
 
-			var base;
-			var baseW, baseH;
-			var basePos;
+      var maxDist = 200;
+      var deadZoneDist = 50;
+      var dist;
+      var frameCounter = 0;
 
-
-			var tweenBack;
+      var base;
+      var baseW, baseH;
+      var basePos;
 
 
-
-			$(document).ready( function() {
-				document.ontouchmove = function(event){
-					event.preventDefault();
-				}
-
-				// set joystick top to be centered in the joystick base
-				console.log(top);
-				topW = $('#joystickTop').width();
-				topH = $('#joystickTop').height();
-				// console.log( 'top w: ' + topW + ' top h: ' + topH );
-
-				baseW = $('#joystickBase').width();
-				baseH = $('#joystickBase').height();
-				basePos = $('#joystickBase').position();
-				// console.log( 'base w: ' + baseW + ' base h: ' + baseH + ' position: ' + basePos.top + ', ' + basePos.left );
-
-				homePosX = topPosX = basePos.left + baseW/2;// - topW/2;
-				homePosY = topPosY = basePos.top + baseH/2;// - topH/2;
-
-				setTopPosition();
-
-				animate();
-				function animate() {
-					// $('#info').html( 'animating: ' + Date.now() + '   ' + webkitRequestAnimationFrame );
-					//webkitRequestAnimationFrame( animate );
-					setTimeout( animate, (1/60) * 1000 );
-					TWEEN.update();
-					if ( !tweenBack && dist > deadZoneDist && (frameCounter % 5) == 0 ) {
-						var msg = {
-							type: 'joystick',
-							x: (topPosX-homePosX)/maxDist,
-							y: (topPosY-homePosY)/-maxDist
-						}
-
-						socket.send( JSON.stringify(msg) );
-						// console.log( 'send ' +  + ', ' +  );
-					}
-				}
-
-				function setTopPosition() {
-
-					$('#joystickTop').css( {
-						top: (topPosY - topW/2) + 'px',
-						left: (topPosX - topH/2) + 'px'
-					});
-				}
+      var tweenBack;
 
 
-				$('#joystickTop').on( 'mousedown', touchStart );
-				$('#joystickTop').on( 'touchstart', touchStart );
-				
-				$('.button').on( 'touchstart', buttonTouch );
-				$('.button').on( 'mousedown', buttonTouch );
 
-				function buttonTouch(e) {
-					e.preventDefault();
-					// $('#info').html( 'touch ' + this.id );
-					var msg = {
-						type: this.id
-					}
-					socket.send( JSON.stringify(msg) );
-				}
+      $(document).ready( function() {
+        document.ontouchmove = function(event){
+          event.preventDefault();
+        }
 
-				function touchStart(e) {
-					if ( tweenBack )
-						return;
+        // set joystick top to be centered in the joystick base
+        console.log(top);
+        topW = $('#joystickTop').width();
+        topH = $('#joystickTop').height();
+        // console.log( 'top w: ' + topW + ' top h: ' + topH );
 
-					if ( e.originalEvent.touches ) {
-					// if ( e.originalEvent instanceof TouchEvent ) {
-						var pos = $('#joystickTop').position();
+        baseW = $('#joystickBase').width();
+        baseH = $('#joystickBase').height();
+        basePos = $('#joystickBase').position();
+        // console.log( 'base w: ' + baseW + ' base h: ' + baseH + ' position: ' + basePos.top + ', ' + basePos.left );
 
-						dragOffsetX = e.originalEvent.touches[0].clientX - pos.left;
-						dragOffsetY = e.originalEvent.touches[0].clientY - pos.top;
-					}
-					else {
-						dragOffsetX = e.offsetX;
-						dragOffsetY = e.offsetY;
-					}
+        homePosX = topPosX = basePos.left + baseW/2;// - topW/2;
+        homePosY = topPosY = basePos.top + baseH/2;// - topH/2;
 
-					$(window).on( 'mousemove', touchMove );
-					$(window).on( 'touchmove', touchMove );
+        setTopPosition();
 
+        animate();
+        function animate() {
+          // $('#info').html( 'animating: ' + Date.now() + '   ' + webkitRequestAnimationFrame );
+          //webkitRequestAnimationFrame( animate );
+          setTimeout( animate, (1/60) * 1000 );
+          TWEEN.update();
+          if ( !tweenBack && dist > deadZoneDist && (frameCounter % 5) == 0 ) {
+            var msg = {
+              type: 'joystick',
+              x: (topPosX-homePosX)/maxDist,
+              y: (topPosY-homePosY)/-maxDist
+            }
 
-					$(window).on( 'mouseup', touchEnd );
-					$(window).on( 'touchend', touchEnd );
-				}
+            socket.send( JSON.stringify(msg) );
+            // console.log( 'send ' +  + ', ' +  );
+          }
+        }
 
-				function touchMove(e) {
-					if ( e.originalEvent.touches ) {
-						var pageX = e.originalEvent.touches[0].pageX;
-						var pageY = e.originalEvent.touches[0].pageY;
+        function setTopPosition() {
 
-						topPosX = parseInt(e.originalEvent.touches[0].pageX) + (topW/2 - dragOffsetX);
-						topPosY = parseInt(e.originalEvent.touches[0].pageY) + (topH/2 - dragOffsetY);
-
-					}
-					else {
-						topPosX = e.pageX + (topW/2 - dragOffsetX);
-						topPosY = e.pageY + (topH/2 - dragOffsetY);
-					}
-
-					function distance( x1, y1, x2, y2 ) {
-						return Math.sqrt( (x2-x1) * (x2-x1) + (y2-y1) * (y2-y1) );
-					}
-
-					dist = distance( topPosX, topPosY, homePosX, homePosY );
-					if ( dist > maxDist ) {
-						var diffX = topPosX - homePosX;
-						var diffY = topPosY - homePosY;
-						topPosX = homePosX + diffX * (maxDist/dist);
-						topPosY = homePosY + diffY * (maxDist/dist);
-					}
-
-					setTopPosition();
-				}
-
-				function touchEnd(e) {
-
-					// $('#info').html( 'touch end at ' + Date.now() + ' TWEEN: ' + TWEEN );
-					var msg = {
-						type: 'joystick',
-						x: 0,
-						y: 0
-					}
-
-					socket.send( JSON.stringify(msg) );
-
-					$(window).off( 'mousemove' );
-					$(window).off( 'touchmove' );
-
-					$(window).off( 'mouseup' );
-					$(window).off( 'touchend' );
-					// topPosX = homePosX;
-					// topPosY = homePosY;
-					//setTopPosition();
+          $('#joystickTop').css( {
+            top: (topPosY - topW/2) + 'px',
+            left: (topPosX - topH/2) + 'px'
+          });
+        }
 
 
-					var start = {
-						posX: topPosX,
-						posY: topPosY
-					}
-					var end = {
-						posX: homePosX,
-						posY: homePosY
-					}
-					var updateCallback = function() {
-						topPosX = this.posX;
-						topPosY = this.posY;
-						// $('#info').html( 'update: ' + this.posX + ', ' + this.posY );
-						setTopPosition();
-					};
-					var completeCallback = function() {
-						tweenBack = null;
-						dist = 0;
-					};
-					tweenBack = new TWEEN.Tween( start )
-										 .to( end, 200 )
-										 .easing( TWEEN.Easing.Quadratic.InOut )
-										 .onUpdate( updateCallback )
-										 .onComplete( completeCallback )
-										 .start();
+        $('#joystickTop').on( 'mousedown', touchStart );
+        $('#joystickTop').on( 'touchstart', touchStart );
 
-				}
+        $('.button').on( 'touchstart', buttonTouch );
+        $('.button').on( 'mousedown', buttonTouch );
 
-				
+        function buttonTouch(e) {
+          e.preventDefault();
+          // $('#info').html( 'touch ' + this.id );
+          var msg = {
+            type: this.id
+          }
+          socket.send( JSON.stringify(msg) );
+        }
 
-				var socket = new WebSocket("ws://freqout.local:8080");
-				socket.onopen = onSocketOpen;
+        function touchStart(e) {
+          if ( tweenBack )
+            return;
 
-				// socket.onmessage = function (event) {
-				// 	console.log(event.data);
-				// }
+          if ( e.originalEvent.touches ) {
+          // if ( e.originalEvent instanceof TouchEvent ) {
+            var pos = $('#joystickTop').position();
 
-				function onSocketOpen() {
-				    console.log( 'socket opened' );
-				    // socket.send( JSON.stringify({poop:'poop'}) );
-				}
+            dragOffsetX = e.originalEvent.touches[0].clientX - pos.left;
+            dragOffsetY = e.originalEvent.touches[0].clientY - pos.top;
+          }
+          else {
+            dragOffsetX = e.offsetX;
+            dragOffsetY = e.offsetY;
+          }
 
-				// $(window).on( 'click', function() {
-				// 	console.log( 'click' );
-				// 	var msg = {
-				// 		type: 'joystick',
-				// 		x: Math.random(),
-				// 		y: Math.random()
-				// 	}
+          $(window).on( 'mousemove', touchMove );
+          $(window).on( 'touchmove', touchMove );
 
-				// 	socket.send( JSON.stringify(msg) );
-				// });
 
-			});
-		</script>
-	</body>
+          $(window).on( 'mouseup', touchEnd );
+          $(window).on( 'touchend', touchEnd );
+        }
+
+        function touchMove(e) {
+          if ( e.originalEvent.touches ) {
+            var pageX = e.originalEvent.touches[0].pageX;
+            var pageY = e.originalEvent.touches[0].pageY;
+
+            topPosX = parseInt(e.originalEvent.touches[0].pageX) + (topW/2 - dragOffsetX);
+            topPosY = parseInt(e.originalEvent.touches[0].pageY) + (topH/2 - dragOffsetY);
+
+          }
+          else {
+            topPosX = e.pageX + (topW/2 - dragOffsetX);
+            topPosY = e.pageY + (topH/2 - dragOffsetY);
+          }
+
+          function distance( x1, y1, x2, y2 ) {
+            return Math.sqrt( (x2-x1) * (x2-x1) + (y2-y1) * (y2-y1) );
+          }
+
+          dist = distance( topPosX, topPosY, homePosX, homePosY );
+          if ( dist > maxDist ) {
+            var diffX = topPosX - homePosX;
+            var diffY = topPosY - homePosY;
+            topPosX = homePosX + diffX * (maxDist/dist);
+            topPosY = homePosY + diffY * (maxDist/dist);
+          }
+
+          setTopPosition();
+        }
+
+        function touchEnd(e) {
+
+          // $('#info').html( 'touch end at ' + Date.now() + ' TWEEN: ' + TWEEN );
+          var msg = {
+            type: 'joystick',
+            x: 0,
+            y: 0
+          }
+
+          socket.send( JSON.stringify(msg) );
+
+          $(window).off( 'mousemove' );
+          $(window).off( 'touchmove' );
+
+          $(window).off( 'mouseup' );
+          $(window).off( 'touchend' );
+          // topPosX = homePosX;
+          // topPosY = homePosY;
+          //setTopPosition();
+
+
+          var start = {
+            posX: topPosX,
+            posY: topPosY
+          }
+          var end = {
+            posX: homePosX,
+            posY: homePosY
+          }
+          var updateCallback = function() {
+            topPosX = this.posX;
+            topPosY = this.posY;
+            // $('#info').html( 'update: ' + this.posX + ', ' + this.posY );
+            setTopPosition();
+          };
+          var completeCallback = function() {
+            tweenBack = null;
+            dist = 0;
+          };
+          tweenBack = new TWEEN.Tween( start )
+                     .to( end, 200 )
+                     .easing( TWEEN.Easing.Quadratic.InOut )
+                     .onUpdate( updateCallback )
+                     .onComplete( completeCallback )
+                     .start();
+
+        }
+
+
+
+        var socket = new WebSocket("ws://freqout.local:8080");
+        socket.onopen = onSocketOpen;
+
+        // socket.onmessage = function (event) {
+        //  console.log(event.data);
+        // }
+
+        function onSocketOpen() {
+            console.log( 'socket opened' );
+            // socket.send( JSON.stringify({poop:'poop'}) );
+        }
+
+        // $(window).on( 'click', function() {
+        //  console.log( 'click' );
+        //  var msg = {
+        //    type: 'joystick',
+        //    x: Math.random(),
+        //    y: Math.random()
+        //  }
+
+        //  socket.send( JSON.stringify(msg) );
+        // });
+
+      });
+    </script>
+  </body>
 </html>
